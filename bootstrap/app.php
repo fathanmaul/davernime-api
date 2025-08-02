@@ -3,6 +3,10 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
+use Illuminate\Validation\UnauthorizedException;
+use Illuminate\Validation\ValidationException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,5 +19,24 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->renderable(function (Throwable $e, $request) {
+            if ($request->is('api/*')) {
+                if ($e instanceof ValidationException) {
+                    return new JsonResponse([
+                        'message' => 'validation fails',
+                        'errors' => $e->errors(),
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+
+                if ($e instanceof UnauthorizedException) {
+                    return new JsonResponse([
+                        'message' => $e->getMessage(),
+                    ], Response::HTTP_FORBIDDEN);
+                }
+
+                return new JsonResponse([
+                    'message' => app()->isLocal() ? $e->getMessage() : 'Internal server error',
+                ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+        });
     })->create();
