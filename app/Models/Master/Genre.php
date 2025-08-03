@@ -12,4 +12,7 @@ class Genre extends Model
      * @var string
      */
     protected $table = "genres";
+
+    protected $guarded = ['id'];
+
 }

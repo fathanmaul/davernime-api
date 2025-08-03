@@ -8,5 +8,5 @@ use Illuminate\Http\Request;
 
 class ProducerController extends BaseMasterController
 {
-    protected string $modelClass = Producer::class;
+    protected $modelClass = Producer::class;
 }

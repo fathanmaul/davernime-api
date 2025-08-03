@@ -12,4 +12,6 @@ class Source extends Model
      * @var string
      */
     protected $table = "sources";
+
+    protected $guarded = ['id'];
 }

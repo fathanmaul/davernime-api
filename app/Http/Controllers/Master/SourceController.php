@@ -8,5 +8,5 @@ use Illuminate\Http\Request;
 
 class SourceController extends BaseMasterController
 {
-    protected string $modelClass = Source::class;
+    protected $modelClass = Source::class;
 }

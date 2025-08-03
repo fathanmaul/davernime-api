@@ -8,9 +8,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 trait MasterResponseTrait
 {
-    protected function resolveSuccessResponse($data = [], Response | int $status = Response::HTTP_OK): JsonResponse
+    protected function resolveSuccessResponse(?string $message = "Success", $data = [], Response | int $status = Response::HTTP_OK): JsonResponse
     {
-        $response = ['message' => "Success"];
+        $response = ['message' => $message];
 
         if (!empty($data)) {
             if ($data instanceof LengthAwarePaginator) {

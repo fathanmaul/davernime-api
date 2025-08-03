@@ -12,4 +12,6 @@ class Licensor extends Model
      * @var string
      */
     protected $table = "licensors";
+
+    protected $guarded = ['id'];
 }

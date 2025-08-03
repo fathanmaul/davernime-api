@@ -12,4 +12,7 @@ class Producer extends Model
      * @var string
      */
     protected $table = "producers";
+
+    protected $guarded = ['id'];
+
 }

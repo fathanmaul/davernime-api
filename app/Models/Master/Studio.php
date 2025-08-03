@@ -12,4 +12,6 @@ class Studio extends Model
      * @var string
      */
     protected $table = "studios";
+
+    protected $guarded = ['id'];
 }

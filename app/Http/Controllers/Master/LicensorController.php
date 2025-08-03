@@ -8,5 +8,5 @@ use Illuminate\Http\Request;
 
 class LicensorController extends BaseMasterController
 {
-    protected string $modelClass = Licensor::class;
+    protected $modelClass = Licensor::class;
 }

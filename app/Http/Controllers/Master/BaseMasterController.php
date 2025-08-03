@@ -3,16 +3,20 @@
 namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\MasterResource;
+use App\Http\Requests\MasterRequest;
 use App\MasterResponseTrait;
 use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Exceptions;
 
 class BaseMasterController extends Controller
 {
     use MasterResponseTrait;
-    protected string $modelClass;
+    /**
+     * The model class associated with the controller.
+     *
+     * @var class-string<\Illuminate\Database\Eloquent\Model>
+     */
+    protected $modelClass;
 
     public function index()
     {
@@ -25,15 +29,22 @@ class BaseMasterController extends Controller
      */
     public function create()
     {
-        //
+        return $this->resolveErrorResponse(
+            ['You won\'t be able to open create page in here']
+        );
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(MasterRequest $request)
     {
-        //
+        $this->modelClass::create([
+            'name' => $request->input('name'),
+            'slug' => \Illuminate\Support\Str::slug($request->input('name'))
+        ]);
+
+        return $this->resolveSuccessResponse(message: class_basename($this->modelClass) . " created successfully");
     }
 
     /**
@@ -55,7 +66,7 @@ class BaseMasterController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(MasterRequest $request, string $id)
     {
         //
     }
