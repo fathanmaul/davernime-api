@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\MasterRequest;
 use App\MasterResponseTrait;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Exceptions;
 
 class BaseMasterController extends Controller
@@ -23,15 +24,13 @@ class BaseMasterController extends Controller
         $items = $this->modelClass::get();
         return $this->resolveSuccessResponse($items);
     }
-    
+
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-        return $this->resolveErrorResponse(
-            ['You won\'t be able to open create page in here']
-        );
+        return $this->resolveErrorResponse();
     }
 
     /**
@@ -52,7 +51,8 @@ class BaseMasterController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $item = $this->modelClass::findOrFail($id);
+        return $this->resolveSuccessResponse($item);
     }
 
     /**
@@ -60,7 +60,7 @@ class BaseMasterController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        return $this->resolveErrorResponse();
     }
 
     /**
@@ -68,7 +68,25 @@ class BaseMasterController extends Controller
      */
     public function update(MasterRequest $request, string $id)
     {
-        //
+        $model = $this->modelClass::find($id);
+
+        if ($model === null) {
+            return $this->resolveErrorResponse(["Data not found."]);
+        }
+
+        $newName = $request->input("name");
+        $newSlug = \Illuminate\Support\Str::slug($newName);
+
+        if ($model->name === $newName && $model->slug === $newSlug) {
+            return $this->resolveSuccessResponse("No changes detected.");
+        }
+
+        $model->update([
+            "name" => $newName,
+            "slug" => $newSlug,
+        ]);
+
+        return $this->resolveSuccessResponse();
     }
 
     /**
@@ -76,6 +94,9 @@ class BaseMasterController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $item = $this->modelClass::find($id);
+        if ($item === null) return $this->resolveErrorResponse([class_basename($this->modelClass) . ' data not found.']);
+        $this->modelClass::where('id', $id)->delete();
+        $this->resolveSuccessResponse(message: class_basename($this->modelClass) . '');
     }
 }
