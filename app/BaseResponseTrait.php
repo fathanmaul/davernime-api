@@ -6,7 +6,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-trait MasterResponseTrait
+trait BaseResponseTrait
 {
     protected function resolveSuccessResponse(?string $message = "Success", $data = [], Response | int $status = Response::HTTP_OK): JsonResponse
     {

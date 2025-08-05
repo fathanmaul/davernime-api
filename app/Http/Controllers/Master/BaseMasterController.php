@@ -2,22 +2,20 @@
 
 namespace App\Http\Controllers\Master;
 
+use App\BaseResponseTrait;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\MasterRequest;
-use App\MasterResponseTrait;
-use Exception;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Exceptions;
+use App\Http\Requests\StoreMasterRequest;
+use App\Http\Requests\UpdateMasterRequest;
 
 class BaseMasterController extends Controller
 {
-    use MasterResponseTrait;
+    use BaseResponseTrait;
     /**
      * The model class associated with the controller.
      *
      * @var class-string<\Illuminate\Database\Eloquent\Model>
      */
-    protected $modelClass;
+    public $modelClass;
 
     public function index()
     {
@@ -36,7 +34,7 @@ class BaseMasterController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(MasterRequest $request)
+    public function store(StoreMasterRequest $request)
     {
         $this->modelClass::create([
             'name' => $request->input('name'),
@@ -66,27 +64,25 @@ class BaseMasterController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(MasterRequest $request, string $id)
+    public function update(UpdateMasterRequest $request, string $id)
     {
         $model = $this->modelClass::find($id);
-
-        if ($model === null) {
+        if (!$model) {
             return $this->resolveErrorResponse(["Data not found."]);
         }
 
         $newName = $request->input("name");
         $newSlug = \Illuminate\Support\Str::slug($newName);
-
         if ($model->name === $newName && $model->slug === $newSlug) {
             return $this->resolveSuccessResponse("No changes detected.");
         }
-
+        
         $model->update([
             "name" => $newName,
             "slug" => $newSlug,
         ]);
 
-        return $this->resolveSuccessResponse();
+        return $this->resolveSuccessResponse(class_basename($this->modelClass) . " updated successfully.");
     }
 
     /**
@@ -95,8 +91,9 @@ class BaseMasterController extends Controller
     public function destroy(string $id)
     {
         $item = $this->modelClass::find($id);
-        if ($item === null) return $this->resolveErrorResponse([class_basename($this->modelClass) . ' data not found.']);
+        if ($item === null)
+            return $this->resolveErrorResponse([class_basename($this->modelClass) . ' data not found.']);
         $this->modelClass::where('id', $id)->delete();
-        $this->resolveSuccessResponse(message: class_basename($this->modelClass) . '');
+        return $this->resolveSuccessResponse(message: class_basename($this->modelClass) . ' deleted successfully.');
     }
 }
