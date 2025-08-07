@@ -19,8 +19,8 @@ class BaseMasterController extends Controller
 
     public function index()
     {
-        $items = $this->modelClass::get();
-        return $this->resolveSuccessResponse($items);
+        $items = $this->modelClass::paginate(10, ['id', 'name', 'slug']);
+        return $this->resolveSuccessResponse(data: $items);
     }
 
     /**
@@ -36,12 +36,12 @@ class BaseMasterController extends Controller
      */
     public function store(StoreMasterRequest $request)
     {
-        $this->modelClass::create([
+        $item = $this->modelClass::create([
             'name' => $request->input('name'),
             'slug' => \Illuminate\Support\Str::slug($request->input('name'))
         ]);
 
-        return $this->resolveSuccessResponse(message: class_basename($this->modelClass) . " created successfully");
+        return $this->resolveSuccessResponse(class_basename($this->modelClass) . " created successfully" ,$item);
     }
 
     /**
@@ -77,12 +77,12 @@ class BaseMasterController extends Controller
             return $this->resolveSuccessResponse("No changes detected.");
         }
         
-        $model->update([
+        $item = $model->update([
             "name" => $newName,
             "slug" => $newSlug,
         ]);
 
-        return $this->resolveSuccessResponse(class_basename($this->modelClass) . " updated successfully.");
+        return $this->resolveSuccessResponse(class_basename($this->modelClass) . " updated successfully.", $item);
     }
 
     /**
@@ -94,6 +94,6 @@ class BaseMasterController extends Controller
         if ($item === null)
             return $this->resolveErrorResponse([class_basename($this->modelClass) . ' data not found.']);
         $this->modelClass::where('id', $id)->delete();
-        return $this->resolveSuccessResponse(message: class_basename($this->modelClass) . ' deleted successfully.');
+        return $this->resolveSuccessResponse(class_basename($this->modelClass) . ' deleted successfully.');
     }
 }
