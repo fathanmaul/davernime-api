@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Master;
 
-use App\BaseResponseTrait;
+use App\Traits\BaseResponseTrait;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreMasterRequest;
 use App\Http\Requests\UpdateMasterRequest;
