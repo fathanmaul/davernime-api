@@ -13,18 +13,19 @@ use Illuminate\Support\Str;
 class AnimeController extends Controller
 {
     use BaseResponseTrait;
+    private array $relations =['genres', 'licensors', 'producers', 'studios'];
     /**
      * Display a listing of the resource.
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index()
     {
-        // $anime = Anime::paginate(10, ['anime_id', 'title']);
         $anime = Anime::paginate(10);
         return $this->resolveSuccessResponse("Data fetched successfully", $anime);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Can't be used in the current API design.
      */
     public function create()
     {
@@ -33,6 +34,8 @@ class AnimeController extends Controller
 
     /**
      * Store a newly created resource in storage.
+     * @param \App\Http\Requests\StoreAnimeRequest $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(StoreAnimeRequest $request)
     {
@@ -59,23 +62,36 @@ class AnimeController extends Controller
 
     /**
      * Display the specified resource.
+     * @param \App\Models\Anime $anime or anime_id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show(Anime $anime)
     {
-        //
+        $anime = Anime::with($this->relations)
+            ->where('anime_id', $anime->anime_id)
+            ->first();
+        if (!$anime) {
+            return $this->resolveErrorResponse(['Data not found.'], 404);
+        }
+        foreach ($this->relations as $relation) {
+            $anime->$relation->makeHidden(['created_at', 'updated_at']);
+        }
+        return $this->resolveSuccessResponse("Data fetched successfully", $anime);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * This method is not used in the current API design.
      */
     public function edit(Anime $anime)
     {
-        //
+        return $this->resolveErrorResponse(status: 400);
     }
 
     /**
      * Update the specified resource in storage.
-     * @TODO implement this method for updating anime
+     * @param  \App\Http\Requests\UpdateAnimeRequest  $request
+     * @param  \App\Models\Anime  $anime
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(UpdateAnimeRequest $request, Anime $anime)
     {
@@ -92,6 +108,8 @@ class AnimeController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     * @param string $anime_id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(string $anime_id)
     {
@@ -120,8 +138,8 @@ class AnimeController extends Controller
         $path = $file->storeAs('temp', $filename, 'public');
 
         return response()->json([
-            'path' => $path, // simpan ke database saat form submit
-            'url' => \Storage::url($path), // bisa digunakan untuk preview
+            'path' => $path,
+            'url' => \Storage::url($path),
         ]);
     }
 }
