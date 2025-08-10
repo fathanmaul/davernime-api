@@ -39,6 +39,5 @@ class UpdateMasterRequest extends FormRequest
                 Rule::unique($table, 'name')->ignore($id)
             ]
         ];
-        // tapi ketika melakukan update dengan name yang sama, tetap name already taken
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnimeController;
 use App\Http\Controllers\Master\GenreController;
 use App\Http\Controllers\Master\LicensorController;
 use App\Http\Controllers\Master\ProducerController;
@@ -19,3 +20,6 @@ Route::prefix('/master')->group(function () {
     Route::resource('/sources', SourceController::class);
     Route::resource('/studios', StudioController::class);
 });
+
+Route::resource('/animes', AnimeController::class);
+Route::post('/animes/thumbnail', [AnimeController::class, 'storeTempThumbnail']);

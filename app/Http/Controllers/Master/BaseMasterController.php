@@ -77,12 +77,14 @@ class BaseMasterController extends Controller
             return $this->resolveSuccessResponse("No changes detected.");
         }
         
-        $item = $model->update([
+        $model->update([
             "name" => $newName,
             "slug" => $newSlug,
         ]);
 
-        return $this->resolveSuccessResponse(class_basename($this->modelClass) . " updated successfully.", $item);
+        $updatedItem = $this->modelClass::find($id);
+
+        return $this->resolveSuccessResponse(class_basename($this->modelClass) . " updated successfully.", $updatedItem);
     }
 
     /**

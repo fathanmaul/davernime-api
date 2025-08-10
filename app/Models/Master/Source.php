@@ -2,7 +2,9 @@
 
 namespace App\Models\Master;
 
+use App\Models\Anime;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Source extends Model
 {
@@ -14,4 +16,9 @@ class Source extends Model
     protected $table = "sources";
 
     protected $guarded = ['id'];
+
+    public function animes(): BelongsToMany
+    {
+        return $this->belongsToMany(Anime::class, 'anime_studios');
+    }
 }
