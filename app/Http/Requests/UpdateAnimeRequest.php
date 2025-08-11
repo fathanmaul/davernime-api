@@ -27,7 +27,7 @@ class UpdateAnimeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ['nullable', Rule::unique('animes')->ignore($this->anime->id), 'string', 'max:255'],
+            'title' => ['nullable', Rule::unique('animes', 'title')->ignore($this->route('anime')), 'string', 'max:255'],
             'english_title' => ['nullable', 'string', 'max:255'],
             'other_title' => ['nullable', 'string', 'max:255'],
             'synopsis' => ['string'],
@@ -42,7 +42,14 @@ class UpdateAnimeRequest extends FormRequest
             'status' => ['nullable', Rule::enum(AnimeStatus::class)],
             'rating' => ['nullable', Rule::enum(AnimeRating::class)],
             'trailer_url' => ['nullable', 'max:255'],
-            'image_url' => ['nullable', 'max:255'],
+            'image_url' => ['nullable', 'url', 'sometimes', 'required_without:image_file'],
+            'image_file' => [
+                'nullable',
+                'image', 'sometimes',
+                'mimes:jpg,jpeg,png,gif',
+                'max:2048',
+                'required_without:image_url'
+            ],
             'source' => ['nullable', 'max:255', 'string'],
             'genres' => ['nullable', 'array'],
             'genres.*' => ['integer', 'exists:genres,id'],

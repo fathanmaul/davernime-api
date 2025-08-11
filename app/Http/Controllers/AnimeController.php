@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\BaseResponseTrait;
+use App\Traits\BaseResponseTrait;
+use App\Traits\HandleImage;
 use App\Http\Requests\StoreAnimeRequest;
 use App\Http\Requests\UpdateAnimeRequest;
 use App\Models\Anime;
@@ -12,8 +13,8 @@ use Illuminate\Support\Str;
 
 class AnimeController extends Controller
 {
-    use BaseResponseTrait;
-    private array $relations =['genres', 'licensors', 'producers', 'studios'];
+    use BaseResponseTrait, HandleImage;
+    private array $relations = ['genres', 'licensors', 'producers', 'studios'];
     /**
      * Display a listing of the resource.
      * @return \Illuminate\Http\JsonResponse
@@ -43,12 +44,11 @@ class AnimeController extends Controller
 
         $validated['anime_id'] = Anime::orderByDesc('anime_id')->value('anime_id') + 1 ?? 1;
 
-        if (!empty($validated['image_url']) && Storage::disk('public')->exists($validated['image_url'])) {
-            $filename = basename($validated['image_url']);
-            $newPath = "thumbnails/$filename";
-            Storage::disk('public')->move($validated['image_url'], $newPath);
-            $validated['image_url'] = $newPath;
-        }
+        $image_path = $request->hasFile('image_file')
+            ? $this->moveImageFile($request->file('image_file'))
+            : ($validated['image_url'] ?? null);
+
+        $validated['image_url'] = $image_path;
 
         $anime = Anime::create($validated);
 
@@ -65,10 +65,10 @@ class AnimeController extends Controller
      * @param \App\Models\Anime $anime or anime_id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show(Anime $anime)
+    public function show(string $anime_id)
     {
         $anime = Anime::with($this->relations)
-            ->where('anime_id', $anime->anime_id)
+            ->where('anime_id', $anime_id)
             ->first();
         if (!$anime) {
             return $this->resolveErrorResponse(['Data not found.'], 404);
@@ -96,12 +96,23 @@ class AnimeController extends Controller
     public function update(UpdateAnimeRequest $request, Anime $anime)
     {
         $validated = $request->validated();
+        if ($request->hasFile('image_file')) {
+            $this->deleteImageIfExists($anime->image_url);
+            $validated['image_url'] = $this->moveImageFile($request->file('image_file'));
+        } elseif (!empty($validated['image_url']) && $validated['image_url'] !== $anime->image_url) {
+            if (!filter_var($validated['image_url'], FILTER_VALIDATE_URL)) {
+                $this->deleteImageIfExists($anime->image_url);
+            }
+        } else {
+            $validated['image_url'] = $anime->image_url;
+        }
 
         $anime->update($validated);
-        $anime->genres()->sync($request->validated('genres'));
-        $anime->licensors()->sync($request->validated('licensors'));
-        $anime->producers()->sync($request->validated('producers'));
-        $anime->studios()->sync($request->validated('studios'));
+        foreach ($this->relations as $relation){
+            if($request->has($relation)){
+                $anime->$relation()->sync($request->validated($relation));
+            }
+        }
 
         return $this->resolveSuccessResponse("$anime->title has been updated!");
     }
@@ -117,8 +128,11 @@ class AnimeController extends Controller
         if (!$anime) {
             return $this->resolveErrorResponse(["Data not found."], 404);
         }
-        if (Storage::disk('public')->exists($anime->image_url)) {
-            Storage::disk('public')->delete($anime->image_url);
+
+        if ($anime->image_url && !filter_var($anime->image_url, FILTER_VALIDATE_URL)) {
+            if (Storage::disk('public')->exists($this->getStoragePath($anime->image_url))) {
+                Storage::disk('public')->delete($this->getStoragePath($anime->image_url));
+            }
         }
         $anime->delete();
         return $this->resolveSuccessResponse("$anime->title has been deleted!");
