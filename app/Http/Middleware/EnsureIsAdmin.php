@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureIsAdmin
@@ -16,7 +17,8 @@ class EnsureIsAdmin
     public function handle(Request $request, Closure $next): Response
     {
         $user = auth()->user();
-        if (!$user || !$user->is_admin) {
+
+        if (!$user || $user->role !== 'admin') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
         return $next($request);

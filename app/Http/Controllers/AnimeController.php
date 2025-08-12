@@ -21,7 +21,7 @@ class AnimeController extends Controller implements HasMiddleware
     public static function middleware()
     {
         return [
-            new Middleware(['auth:sanctum'], except: ['index', 'show'])
+            new Middleware(['auth:sanctum', 'ensureIsAdmin'], except: ['index', 'show'])
         ];
     }
 
