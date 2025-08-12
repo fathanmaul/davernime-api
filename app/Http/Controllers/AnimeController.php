@@ -8,13 +8,23 @@ use App\Http\Requests\StoreAnimeRequest;
 use App\Http\Requests\UpdateAnimeRequest;
 use App\Models\Anime;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class AnimeController extends Controller
+class AnimeController extends Controller implements HasMiddleware
 {
     use BaseResponseTrait, HandleImage;
     private array $relations = ['genres', 'licensors', 'producers', 'studios'];
+
+    public static function middleware()
+    {
+        return [
+            new Middleware(['auth:sanctum'], except: ['index', 'show'])
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      * @return \Illuminate\Http\JsonResponse

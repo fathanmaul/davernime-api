@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Middleware\EnsureIsAdmin;
+use App\Http\Middleware\JwtMiddleware;
+use App\Http\Middleware\RefreshTokenExpiry;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -8,6 +12,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Validation\UnauthorizedException;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\Http\Middleware\CheckAbilities;
+use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -18,7 +24,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->redirectGuestsTo(fn() => route('auth.login'));
+        $middleware->alias([
+            'ensureIsAdmin' => EnsureIsAdmin::class,
+            'abilities' => CheckAbilities::class,
+            'ability' => CheckForAnyAbility::class
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->renderable(function (Throwable $e, $request) {
@@ -40,6 +51,12 @@ return Application::configure(basePath: dirname(__DIR__))
                     return new JsonResponse([
                         'message' => app()->isLocal() ? $e->getMessage() : 'Not found.',
                     ], Response::HTTP_NOT_FOUND);
+                }
+
+                if($e instanceof AuthenticationException) {
+                    return new JsonResponse([
+                        'message' => 'Unauthorized',
+                    ], Response::HTTP_UNAUTHORIZED);
                 }
 
                 return new JsonResponse([
