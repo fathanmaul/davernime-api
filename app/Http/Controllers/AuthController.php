@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Traits\BaseResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -22,7 +23,8 @@ class AuthController extends Controller
         $user = User::create($input);
         [$access_token, $refresh_token] = $this->generateTokens($user);
 
-        return $this->resolveSuccessResponse("User registered successfully", ['user' => $user, 'token' => $access_token->plainTextToken, 'refresh_token' => $refresh_token->plainTextToken]);
+        $cookie = cookie('refresh_token', $refresh_token->plainTextToken, config('sanctum.rt_expiration'), '/', null, false, true);
+        return $this->resolveSuccessResponse("User registered successfully", ['user' => $user, 'token' => $access_token->plainTextToken, 'refresh_token' => $refresh_token->plainTextToken])->cookie($cookie);
     }
 
     public function doLogin(LoginRequest $request)
@@ -35,8 +37,9 @@ class AuthController extends Controller
         }
 
         [$access_token, $refresh_token] = $this->generateTokens($user);
+        $cookie = cookie('refresh_token', $refresh_token->plainTextToken, config('sanctum.rt_expiration'), '/', null, false, true);
 
-        return $this->resolveSuccessResponse("Login successfully", ['user' => ['name' => $user->name, 'email' => $user->email, 'avatar_url' => $user->avatar_url], 'token' => $access_token->plainTextToken, 'refresh_token' => $refresh_token->plainTextToken]);
+        return $this->resolveSuccessResponse("Login successfully", ['user' => ['name' => $user->name, 'email' => $user->email, 'avatar_url' => $user->avatar_url], 'token' => $access_token->plainTextToken, 'refresh_token' => $refresh_token->plainTextToken])->cookie($cookie);
     }
 
     public function doLogout(Request $request)
