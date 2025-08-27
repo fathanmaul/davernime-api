@@ -45,6 +45,6 @@ class RegisterRequest extends FormRequest
         return $this->resolveSuccessResponse("User Registered Successfully", [
             "user" => $user,
             "access_token" => $access_token,
-        ])->cookie("refresh_token", $refresh_token, config('sanctum.rt_expiration'), '/', null, false, true);
+        ]);
     }
 }
