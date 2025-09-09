@@ -7,11 +7,13 @@ use App\Models\Master\Genre;
 use App\Models\Master\Licensor;
 use App\Models\Master\Producer;
 use App\Models\Master\Studio;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Anime extends Model
 {
+    use HasFactory;
     protected $guarded = ['id', 'anime_id'];
 
     protected $fillable = [
