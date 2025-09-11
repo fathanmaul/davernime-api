@@ -29,9 +29,67 @@ class AnimeController extends Controller implements HasMiddleware
      * Display a listing of the resource.
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index()
+    public function index(Request $request)
     {
-        $anime = Anime::paginate(10);
+        $query = Anime::with($this->relations);
+
+        if ($search = $request->input('q')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%");
+            });
+        }
+
+        if ($sort = $request->input('sort')) {
+            switch ($sort) {
+                case 'latest':
+                    $query->orderBy('updated_at', 'desc');
+                    break;
+                case 'oldest':
+                    $query->orderBy('updated_at', 'asc');
+                    break;
+                case 'title_asc':
+                    $query->orderBy('title', 'asc');
+                    break;
+                case 'title_desc':
+                    $query->orderBy('title', 'desc');
+                    break;
+                default:
+                    $query->orderBy('created_at', 'desc');
+                    break;
+            }
+        }
+
+        if ($status = $request->input('status')) {
+            switch ($status) {
+                case 'airing':
+                    $query->where('status', 'Currently Airing');
+                    break;
+                case 'completed':
+                    $query->where('status', 'Finished Airing');
+                    break;
+                case 'not_aired':
+                    $query->where('status', 'Not yet aired');
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if ($genre = $request->input('genre')) {
+            $query->whereHas('genres', function ($q) use ($genre) {
+                $q->where('id', $genre);
+            });
+        }
+
+        $limit = (int) $request->input('limit', 12);
+        $paginate = filter_var($request->input('paginate', true), FILTER_VALIDATE_BOOLEAN);
+
+        if ($paginate) {
+            $anime = $query->paginate($limit);
+        } else {
+            $anime = $query->limit($limit)->get();
+        }
+
         return $this->resolveSuccessResponse("Data fetched successfully", $anime);
     }
 
@@ -118,8 +176,8 @@ class AnimeController extends Controller implements HasMiddleware
         }
 
         $anime->update($validated);
-        foreach ($this->relations as $relation){
-            if($request->has($relation)){
+        foreach ($this->relations as $relation) {
+            if ($request->has($relation)) {
                 $anime->$relation()->sync($request->validated($relation));
             }
         }
